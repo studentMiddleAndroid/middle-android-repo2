@@ -9,29 +9,30 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import ru.yandex.praktikumchatapp.data.ChatRepository
 
+data class ChatState(
+    val messages: List<Message> = emptyList(),
+    val shouldShowKeyboard: Boolean = false
+)
+
 class ChatViewModel(
     val isWithReplies: Boolean = true
 ) : ViewModel() {
     private val repository = ChatRepository()
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
-
-    private val _shouldShowKeyboard = MutableStateFlow(false)
-
-    // TODO Задание 4: замените messages и shouldShowKeyboard на state
+    private val _chatState = MutableStateFlow(ChatState())
+    val chatState: StateFlow<ChatState> = _chatState.asStateFlow()
 
     init {
         viewModelScope.launch {
             while (isWithReplies) {
                 repository.getReplyMessage().collect { response ->
-                    _messages.update { currentMessages ->
-                        val newMessages = currentMessages + Message.OtherMessage(response)
+                    _chatState.update { currentState ->
+                        val newMessages = currentState.messages + Message.OtherMessage(response)
+                        val shouldShowKeyboard = currentState.messages.isEmpty() && newMessages.isNotEmpty()
 
-                        if (currentMessages.isEmpty()) {
-                            _shouldShowKeyboard.value = true
-                        }
-
-                        newMessages
+                        currentState.copy(
+                            messages = newMessages,
+                            shouldShowKeyboard = shouldShowKeyboard
+                        )
                     }
                 }
             }
@@ -39,12 +40,18 @@ class ChatViewModel(
     }
 
     fun sendMyMessage(messageText: String) {
-        _messages.update { currentMessages ->
-            currentMessages + Message.MyMessage(messageText.trim())
+        if (messageText.isNotBlank()) {
+            _chatState.update { currentState ->
+                currentState.copy(
+                    messages = currentState.messages + Message.MyMessage(messageText.trim())
+                )
+            }
         }
     }
 
     fun resetKeyboardState() {
-        _shouldShowKeyboard.value = false
+        _chatState.update { currentState ->
+            currentState.copy(shouldShowKeyboard = false)
+        }
     }
 }

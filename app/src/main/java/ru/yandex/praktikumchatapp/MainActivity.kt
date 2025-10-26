@@ -73,7 +73,8 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.messages.collectAsState()
+    val messagesList = viewModel.chatState.collectAsState().value.messages
+
     val messageText = remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
@@ -85,7 +86,7 @@ fun ChatScreen(
                 .weight(1f)
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
         ) {
-            items(messagesList.value) { message ->
+            items(messagesList) { message ->
                 when (message) {
                     is Message.MyMessage -> MyMessageCard(message)
                     is Message.OtherMessage -> OtherMessageCard(message)
