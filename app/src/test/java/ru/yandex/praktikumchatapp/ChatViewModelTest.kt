@@ -1,3 +1,6 @@
+import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
+import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -31,9 +34,25 @@ class ChatViewModelTest {
 
     @Test
     fun `send message should update state with MyMessage`() = runTest {
-        val message = Message.MyMessage("TestMessage")
+        val testMessage = "TestMessage"
 
-        // TODO Задание 5: допишите юнит-тест
+        viewModel.sendMyMessage(testMessage)
+
+        val state = viewModel.chatState.value
+        val messages = state.messages
+
+        assertTrue("Messages list should not be empty", messages.isNotEmpty())
+
+        val lastMessage = messages.last()
+
+        when (lastMessage) {
+            is Message.MyMessage -> {
+                assertEquals("Message text should match", testMessage, lastMessage.text)
+            }
+            is Message.OtherMessage -> {
+                fail("Message should be MyMessage, but was OtherMessage")
+            }
+        }
     }
 
     @Test
