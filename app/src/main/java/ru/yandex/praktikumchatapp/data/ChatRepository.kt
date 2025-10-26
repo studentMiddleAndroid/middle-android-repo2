@@ -1,6 +1,5 @@
 package ru.yandex.praktikumchatapp.data
 
-import android.net.http.HttpException
 import android.util.Log
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -11,11 +10,6 @@ import java.io.IOException
 class ChatRepository(
     private val api: ChatApi = ChatApi()
 ) {
-
-//    fun getReplyMessage(): Flow<String> {
-//        return api.getReply()  // TODO Задание 2: добавьте обработку ошибок
-//    }
-
     companion object {
         private const val MAX_RETRIES = 5
         private const val BASE_DELAY_MS = 1000L
