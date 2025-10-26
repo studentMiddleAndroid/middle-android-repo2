@@ -3,6 +3,9 @@ import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -59,6 +62,35 @@ class ChatViewModelTest {
     fun testReceiveMessage_concurrentMessages() = runTest {
         val messagesToSend = (1..100).map { Message.MyMessage("Message $it") }
 
-        // TODO Задание 6: допишите юнит-тест
+        coroutineScope {
+            val jobs = messagesToSend.map { message ->
+                launch {
+                    viewModel.sendMyMessage(message.text)
+                }
+            }
+
+            jobs.joinAll()
+        }
+
+
+        val state = viewModel.chatState.value
+        val finalMessages = state.messages
+
+        assertEquals("Should contain all 100 messages", 100, finalMessages.size)
+
+        assertTrue("All messages should be MyMessage",
+            finalMessages.all { it is Message.MyMessage })
+
+        val expectedTexts = messagesToSend.map { it.text }.toSet()
+        val actualTexts = finalMessages
+            .filterIsInstance<Message.MyMessage>()
+            .map { it.text }
+            .toSet()
+
+        assertEquals("All message texts should be present",
+            expectedTexts, actualTexts)
+
+        assertEquals("No duplicate messages should exist",
+            finalMessages.size, finalMessages.distinct().size)
     }
 }
