@@ -16,7 +16,7 @@ class ChatViewModel(
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages.asStateFlow()
 
-    // TODO Задание 3: добавьте состояние shouldShowKeyboard
+    private val _shouldShowKeyboard = MutableStateFlow(false)
 
     // TODO Задание 4: замените messages и shouldShowKeyboard на state
 
@@ -25,7 +25,13 @@ class ChatViewModel(
             while (isWithReplies) {
                 repository.getReplyMessage().collect { response ->
                     _messages.update { currentMessages ->
-                        currentMessages + Message.OtherMessage(response)
+                        val newMessages = currentMessages + Message.OtherMessage(response)
+
+                        if (currentMessages.isEmpty()) {
+                            _shouldShowKeyboard.value = true
+                        }
+
+                        newMessages
                     }
                 }
             }
@@ -36,5 +42,9 @@ class ChatViewModel(
         _messages.update { currentMessages ->
             currentMessages + Message.MyMessage(messageText.trim())
         }
+    }
+
+    fun resetKeyboardState() {
+        _shouldShowKeyboard.value = false
     }
 }
