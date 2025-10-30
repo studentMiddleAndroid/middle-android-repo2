@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -73,14 +75,23 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     val viewModel = remember { ChatViewModel() }
-    val messagesList = viewModel.chatState.collectAsState().value.messages
+    val chatState = viewModel.chatState.collectAsState().value
+    val messagesList = chatState.messages
 
     val messageText = remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
-    Column(modifier = modifier.fillMaxSize()) {
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-        // Список сообщений
+    LaunchedEffect(chatState.shouldShowKeyboard) {
+        if (chatState.shouldShowKeyboard) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+            viewModel.resetKeyboardState()
+        }
+    }
+
+    Column(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
@@ -94,7 +105,6 @@ fun ChatScreen(
             }
         }
 
-        // Поле для ввода сообщения
         Row(
             modifier = Modifier
                 .padding(16.dp)

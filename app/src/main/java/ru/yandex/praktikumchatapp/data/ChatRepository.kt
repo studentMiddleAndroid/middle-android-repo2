@@ -19,7 +19,7 @@ class ChatRepository(
     fun getReplyMessage(): Flow<String> {
         return api.getReply()
             .retryWhen { cause, attempt ->
-                if (cause is IOException && attempt <= MAX_RETRIES) {
+                if ((cause is IOException || cause is Exception) && attempt <= MAX_RETRIES) {
                     val delayTime = BASE_DELAY_MS shl (attempt.toInt() - 1)
                     delay(minOf(delayTime, MAX_DELAY_MS))
                     true
